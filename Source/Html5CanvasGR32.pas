@@ -4,28 +4,10 @@ interface
 
 uses
   Classes, Types, SysUtils, Variants, Graphics, GR32, GR32_Polygons,
-  GR32_Paths, GR32_Transforms, Html5CanvasInterfaces;
+  GR32_Paths, GR32_Geometry, GR32_Transforms, GR32_ColorGradients,
+  Html5CanvasInterfaces;
 
 type
-  THtml5CanvasTransformation = class(TTransformation)
-  protected
-    FInverseMatrix: TFloatMatrix;
-    FFixedMatrix, FInverseFixedMatrix: TFixedMatrix;
-    procedure PrepareTransform; override;
-    procedure ReverseTransformFloat(DstX, DstY: TFloat; out SrcX, SrcY: TFloat); override;
-    procedure ReverseTransformFixed(DstX, DstY: TFixed; out SrcX, SrcY: TFixed); override;
-    procedure TransformFloat(SrcX, SrcY: TFloat; out DstX, DstY: TFloat); override;
-    procedure TransformFixed(SrcX, SrcY: TFixed; out DstX, DstY: TFixed); override;
-  public
-    Matrix: TFloatMatrix;
-    constructor Create; virtual;
-    function GetTransformedBounds(const ASrcRect: TFloatRect): TFloatRect; override;
-    procedure Clear;
-    procedure Rotate(Alpha: TFloat);
-    procedure Scale(Sx, Sy: TFloat);
-    procedure Translate(Dx, Dy: TFloat);
-  end;
-
   THtml5CanvasElementGR32 = class(TCustomHtml5CanvasElement)
   protected
     FBitmap32: TBitmap32;
@@ -54,11 +36,16 @@ type
     TransformationMatrix: TFloatMatrix;
   end;
 
+  THtml5CanvasGradient = class (TCustomHtml5CanvasGradient)
+  public
+    procedure AddColorStop(Offset: Double; Color: string); override;
+  end;
+
   THtml5Canvas2DContextGR32 = class(TCustomHtml5Canvas2DContext)
   private
     FPath: TFlattenedPath;
     FRenderer: TPolygonRenderer32;
-    FTransformation: THtml5CanvasTransformation;
+    FTransformMatrix: TFloatMatrix;
 
     FFillColor32: TColor32;
     FStrokeColor32: TColor32;
@@ -76,8 +63,9 @@ type
 
     FStates: array of THtml5CanvasStateGR32;
 
-    procedure TextToPath(Text: string; x, y: Double);
+    procedure TextToPath(Text: string; X, Y: Double);
     procedure UpdateApplyShadow;
+    function VertexTransform(Vertex: TFloatPoint): TFloatPoint;
   protected
     function GetGlobalCompositeOperation: string; override;
     procedure SetGlobalCompositeOperation(Value: string); override;
@@ -691,118 +679,6 @@ begin
 end;
 
 
-{ THtml5CanvasTransformation }
-
-constructor THtml5CanvasTransformation.Create;
-begin
-  Clear;
-end;
-
-procedure THtml5CanvasTransformation.Clear;
-begin
-  Matrix := IdentityMatrix;
-  Changed;
-end;
-
-function THtml5CanvasTransformation.GetTransformedBounds(const ASrcRect: TFloatRect): TFloatRect;
-var
-  V1, V2, V3, V4: TVector3f;
-begin
-  V1[0] := ASrcRect.Left;  V1[1] := ASrcRect.Top;    V1[2] := 1;
-  V2[0] := ASrcRect.Right; V2[1] := V1[1];           V2[2] := 1;
-  V3[0] := V1[0];          V3[1] := ASrcRect.Bottom; V3[2] := 1;
-  V4[0] := V2[0];          V4[1] := V3[1];           V4[2] := 1;
-  V1 := VectorTransform(Matrix, V1);
-  V2 := VectorTransform(Matrix, V2);
-  V3 := VectorTransform(Matrix, V3);
-  V4 := VectorTransform(Matrix, V4);
-  Result.Left   := Min(Min(V1[0], V2[0]), Min(V3[0], V4[0]));
-  Result.Right  := Max(Max(V1[0], V2[0]), Max(V3[0], V4[0]));
-  Result.Top    := Min(Min(V1[1], V2[1]), Min(V3[1], V4[1]));
-  Result.Bottom := Max(Max(V1[1], V2[1]), Max(V3[1], V4[1]));
-end;
-
-procedure THtml5CanvasTransformation.PrepareTransform;
-begin
-  FInverseMatrix := Matrix;
-  Invert(FInverseMatrix);
-
-  // calculate a fixed point (65536) factors
-  FInverseFixedMatrix := FixedMatrix(FInverseMatrix);
-  FFixedMatrix := FixedMatrix(Matrix);
-
-  TransformValid := True;
-end;
-
-procedure THtml5CanvasTransformation.Rotate(Alpha: TFloat);
-var
-  S, C: TFloat;
-  M: TFloatMatrix;
-begin
-  GR32_Math.SinCos(Alpha, S, C);
-  M := IdentityMatrix;
-  M[0, 0] := C;   M[1, 0] := S;
-  M[0, 1] := -S;  M[1, 1] := C;
-  Matrix := Mult(Matrix, M);
-  Changed;
-end;
-
-procedure THtml5CanvasTransformation.Scale(Sx, Sy: TFloat);
-var
-  M: TFloatMatrix;
-begin
-  M := IdentityMatrix;
-  M[0, 0] := Sx;
-  M[1, 1] := Sy;
-  Matrix := Mult(Matrix, M);
-  Changed;
-end;
-
-procedure THtml5CanvasTransformation.ReverseTransformFloat(
-  DstX, DstY: TFloat;
-  out SrcX, SrcY: TFloat);
-begin
-  SrcX := DstX * FInverseMatrix[0,0] + DstY * FInverseMatrix[1,0] + FInverseMatrix[2,0];
-  SrcY := DstX * FInverseMatrix[0,1] + DstY * FInverseMatrix[1,1] + FInverseMatrix[2,1];
-end;
-
-procedure THtml5CanvasTransformation.ReverseTransformFixed(
-  DstX, DstY: TFixed;
-  out SrcX, SrcY: TFixed);
-begin
-  SrcX := FixedMul(DstX, FInverseFixedMatrix[0,0]) + FixedMul(DstY, FInverseFixedMatrix[1,0]) + FInverseFixedMatrix[2,0];
-  SrcY := FixedMul(DstX, FInverseFixedMatrix[0,1]) + FixedMul(DstY, FInverseFixedMatrix[1,1]) + FInverseFixedMatrix[2,1];
-end;
-
-procedure THtml5CanvasTransformation.TransformFloat(
-  SrcX, SrcY: TFloat;
-  out DstX, DstY: TFloat);
-begin
-  DstX := SrcX * Matrix[0,0] + SrcY * Matrix[1,0] + Matrix[2,0];
-  DstY := SrcX * Matrix[0,1] + SrcY * Matrix[1,1] + Matrix[2,1];
-end;
-
-procedure THtml5CanvasTransformation.TransformFixed(
-  SrcX, SrcY: TFixed;
-  out DstX, DstY: TFixed);
-begin
-  DstX := FixedMul(SrcX, FFixedMatrix[0,0]) + FixedMul(SrcY, FFixedMatrix[1,0]) + FFixedMatrix[2,0];
-  DstY := FixedMul(SrcX, FFixedMatrix[0,1]) + FixedMul(SrcY, FFixedMatrix[1,1]) + FFixedMatrix[2,1];
-end;
-
-procedure THtml5CanvasTransformation.Translate(Dx, Dy: TFloat);
-var
-  M: TFloatMatrix;
-begin
-  M := IdentityMatrix;
-  M[2,0] := Dx;
-  M[2,1] := Dy;
-  Matrix := Mult(Matrix, M);
-
-  Changed;
-end;
-
-
 { THtml5CanvasElementGR32 }
 
 constructor THtml5CanvasElementGR32.Create(Bitmap32: TBitmap32);
@@ -818,6 +694,15 @@ end;
 function THtml5CanvasElementGR32.GetWidth: Cardinal;
 begin
   Result := FBitmap32.Width;
+end;
+
+
+{ THtml5CanvasGradient }
+
+procedure THtml5CanvasGradient.AddColorStop(Offset: Double; Color: string);
+begin
+  inherited;
+
 end;
 
 
@@ -839,21 +724,26 @@ begin
   FDirectDraw := True;
 
   FPath := TFlattenedPath.Create;
-  FTransformation := THtml5CanvasTransformation.Create;
+  FTransformMatrix := IdentityMatrix;
 end;
 
 destructor THtml5Canvas2DContextGR32.Destroy;
 begin
   FPath.Free;
   FRenderer.Free;
-  FTransformation.Free;
   inherited;
 end;
 
 procedure THtml5Canvas2DContextGR32.Arc(X, Y, Radius, StartAngle,
   EndAngle: Double; AntiClockwise: Boolean);
+var
+  Points: TArrayOfFloatPoint;
+  Index: Integer;
 begin
-  FPath.Arc(FloatPoint(X, Y), StartAngle, EndAngle, Radius);
+  Points := BuildArc(FloatPoint(X, Y), StartAngle, EndAngle, Radius);
+  for Index := 0 to Length(Points) - 1 do
+    Points[Index] := VertexTransform(Points[Index]);
+  FPath.Polygon(Points);
 end;
 
 procedure THtml5Canvas2DContextGR32.ArcTo(X1, Y1, X2, Y2, Radius: Double);
@@ -869,8 +759,9 @@ end;
 procedure THtml5Canvas2DContextGR32.BezierCurveTo(ControlPoint1X,
   ControlPoint1Y, ControlPoint2X, ControlPoint2Y, X, Y: Double);
 begin
-  FPath.CurveTo(ControlPoint1X, ControlPoint1Y,
-    ControlPoint2X, ControlPoint2Y, X, Y);
+  FPath.CurveTo(VertexTransform(FloatPoint(ControlPoint1X, ControlPoint1Y)),
+    VertexTransform(FloatPoint(ControlPoint2X, ControlPoint2Y)),
+    VertexTransform(FloatPoint(X, Y)));
 end;
 
 procedure THtml5Canvas2DContextGR32.ClearRect(X, Y, Width, Height: Double);
@@ -883,18 +774,18 @@ begin
   FRenderer.Color := 0;
 
   SetLength(Path, 5);
-  Path[0] := FloatPoint(X, Y);
-  Path[1] := FloatPoint(X + Width, Y);
-  Path[2] := FloatPoint(X + Width, Y + Height);
-  Path[3] := FloatPoint(X, Y + Height);
-  Path[4] := FloatPoint(X, Y);
+  Path[0] := VertexTransform(FloatPoint(X, Y));
+  Path[1] := VertexTransform(FloatPoint(X + Width, Y));
+  Path[2] := VertexTransform(FloatPoint(X + Width, Y + Height));
+  Path[3] := VertexTransform(FloatPoint(X, Y + Height));
+  Path[4] := VertexTransform(FloatPoint(X, Y));
 
   with THtml5CanvasElementGR32(CanvasElement) do
   begin
     ClipRect := FloatRect(FBitmap32.ClipRect);
     FRenderer.Bitmap := FBitmap32;
   end;
-  FRenderer.PolygonFS(Path, ClipRect, FTransformation);
+  FRenderer.PolygonFS(Path, ClipRect);
 
   FRenderer.Color := OldColor;
 end;
@@ -952,7 +843,7 @@ begin
 
     FRenderer.Color := SetAlpha(FFillColor32,
       Round(AlphaComponent(FFillColor32) * GlobalAlpha));
-    FRenderer.PolyPolygonFS(FPath.Path, ClipRect, FTransformation);
+    FRenderer.PolyPolygonFS(FPath.Path, ClipRect);
   end
   else
   begin
@@ -972,7 +863,7 @@ begin
       FRenderer.Color := SetAlpha(FFillColor32,
         Round(AlphaComponent(FFillColor32) * $FF * GlobalAlpha));
   *)
-      FRenderer.PolyPolygonFS(FPath.Path, ClipRect, FTransformation);
+      FRenderer.PolyPolygonFS(FPath.Path, ClipRect);
 
       with THtml5CanvasElementGR32(CanvasElement) do
       begin
@@ -988,6 +879,7 @@ end;
 
 procedure THtml5Canvas2DContextGR32.FillRect(X, Y, Width, Height: Double);
 begin
+  // redirection
   Rect(X, Y, Width, Height);
   Fill;
 end;
@@ -1002,7 +894,15 @@ end;
 procedure THtml5Canvas2DContextGR32.FillText(Text: string; x, y,
   MaxWidth: Double);
 begin
+  // redirection
   FillText(Text, X, Y);
+end;
+
+procedure THtml5Canvas2DContextGR32.FillText(Text: string; x, y: Double);
+begin
+  with THtml5CanvasElementGR32(CanvasElement) do
+    TextToPath(Text, X, Y + FBitmap32.Font.Size);
+  Fill;
 end;
 
 procedure THtml5Canvas2DContextGR32.FontChanged;
@@ -1100,12 +1000,6 @@ begin
   end;
 end;
 
-procedure THtml5Canvas2DContextGR32.FillText(Text: string; x, y: Double);
-begin
-  TextToPath(Text, X, Y + THtml5CanvasElementGR32(CanvasElement).FBitmap32.Font.Size);
-  Fill;
-end;
-
 function THtml5Canvas2DContextGR32.GetGlobalCompositeOperation: string;
 begin
   Result := FGlobalCompositeOperation;
@@ -1155,13 +1049,19 @@ begin
 end;
 
 function THtml5Canvas2DContextGR32.IsPointInPath(X, Y: Double): Boolean;
+var
+  Index: Integer;
 begin
-
+  Result := True;
+  for Index := 0 to Length(FPath.Path) - 1 do
+    if PointInPolygon(FloatPoint(X, Y), FPath.Path[Index]) then
+      Exit;
+  Result := False;
 end;
 
 procedure THtml5Canvas2DContextGR32.LineTo(X, Y: Double);
 begin
-  FPath.LineTo(X, Y);
+  FPath.LineTo(VertexTransform(FloatPoint(X, Y)));
 end;
 
 procedure THtml5Canvas2DContextGR32.LineWidthChanged;
@@ -1176,7 +1076,7 @@ end;
 
 procedure THtml5Canvas2DContextGR32.MoveTo(X, Y: Double);
 begin
-  FPath.MoveTo(X, Y);
+  FPath.MoveTo(VertexTransform(FloatPoint(X, Y)));
 end;
 
 procedure THtml5Canvas2DContextGR32.PutImageData(Imagedata: IHtml5ImageData;
@@ -1194,12 +1094,14 @@ end;
 procedure THtml5Canvas2DContextGR32.QuadraticCurveTo(ControlPointX,
   ControlPointY, X, Y: Double);
 begin
-  FPath.ConicTo(ControlPointX, ControlPointY, X, Y);
+  FPath.ConicTo(VertexTransform(FloatPoint(ControlPointX, ControlPointY)),
+    VertexTransform(FloatPoint(X, Y)));
 end;
 
 procedure THtml5Canvas2DContextGR32.Rect(X, Y, Width, Height: Double);
 begin
-  FPath.Rectangle(FloatRect(X, Y, X + Width, Y + Height));
+  FPath.Rectangle(FloatRect(VertexTransform(FloatPoint(X, Y)),
+    VertexTransform(FloatPoint(X + Width, Y + Height))));
 end;
 
 procedure THtml5Canvas2DContextGR32.Restore;
@@ -1223,14 +1125,23 @@ begin
   Font := FStates[Index].Font;
   TextAlign := FStates[Index].TextAlign;
   TextBaseline := FStates[Index].TextBaseline;
-  FTransformation.Matrix := FStates[Index].TransformationMatrix;
+  FTransformMatrix := FStates[Index].TransformationMatrix;
 
   SetLength(FStates, Index);
 end;
 
 procedure THtml5Canvas2DContextGR32.Rotate(Angle: Double);
+var
+  S, C: TFloat;
+  M: TFloatMatrix;
 begin
-  FTransformation.Rotate(-Angle);
+  GR32_Math.SinCos(-Angle, S, C);
+  M := IdentityMatrix;
+  M[0, 0] := C;
+  M[1, 0] := S;
+  M[0, 1] := -S;
+  M[1, 1] := C;
+  FTransformMatrix := Mult(FTransformMatrix, M);
 end;
 
 procedure THtml5Canvas2DContextGR32.Save;
@@ -1255,12 +1166,17 @@ begin
   FStates[Index].Font := Font;
   FStates[Index].TextAlign := FTextAlign;
   FStates[Index].TextBaseline := FTextBaseline;
-  FStates[Index].TransformationMatrix := FTransformation.Matrix;
+  FStates[Index].TransformationMatrix := FTransformMatrix;
 end;
 
 procedure THtml5Canvas2DContextGR32.Scale(X, Y: Double);
+var
+  M: TFloatMatrix;
 begin
-  FTransformation.Scale(X, Y);
+  M := IdentityMatrix;
+  M[0, 0] := X;
+  M[1, 1] := Y;
+  FTransformMatrix := Mult(FTransformMatrix, M);
 end;
 
 procedure THtml5Canvas2DContextGR32.SetGlobalCompositeOperation(Value: string);
@@ -1294,6 +1210,7 @@ begin
   if FTextAlign <> Value then
   begin
     FTextAlign := Value;
+    //TextAlignChanged;
   end;
 end;
 
@@ -1302,17 +1219,18 @@ begin
   if FTextBaseline <> Value then
   begin
     FTextBaseline := Value;
+    //TextBaselineChanged;
   end;
 end;
 
 procedure THtml5Canvas2DContextGR32.SetTransform(A, B, C, D, E, F: Double);
 begin
-  FTransformation.Matrix[0, 0] := A;
-  FTransformation.Matrix[0, 1] := B;
-  FTransformation.Matrix[0, 2] := C;
-  FTransformation.Matrix[1, 0] := D;
-  FTransformation.Matrix[1, 1] := E;
-  FTransformation.Matrix[1, 2] := F;
+  FTransformMatrix[0, 0] := A;
+  FTransformMatrix[0, 1] := B;
+  FTransformMatrix[0, 2] := C;
+  FTransformMatrix[1, 0] := D;
+  FTransformMatrix[1, 1] := E;
+  FTransformMatrix[1, 2] := F;
 end;
 
 procedure THtml5Canvas2DContextGR32.ShadowBlurChanged;
@@ -1366,12 +1284,12 @@ begin
       SetLength(APoints, 1);
       APoints[0] := BuildPolyLine(FPath.Points, LineWidth, FJoinStyle,
         FEndStyle, MiterLimit);
-      FRenderer.PolygonFS(APoints[0], ClipRect, FTransformation);
+      FRenderer.PolygonFS(APoints[0], ClipRect);
     end;
 
     APoints := BuildPolyPolyLine(FPath.Path, True, LineWidth, FJoinStyle,
       FEndStyle, MiterLimit);
-    FRenderer.PolyPolygonFS(APoints, ClipRect, FTransformation);
+    FRenderer.PolyPolygonFS(APoints, ClipRect);
   end
   else
   begin
@@ -1393,12 +1311,12 @@ begin
         SetLength(APoints, 1);
         APoints[0] := BuildPolyLine(FPath.Points, LineWidth, FJoinStyle,
           FEndStyle, MiterLimit);
-        FRenderer.PolygonFS(APoints[0], ClipRect, FTransformation);
+        FRenderer.PolygonFS(APoints[0], ClipRect);
       end;
 
       APoints := BuildPolyPolyLine(FPath.Path, True, LineWidth, FJoinStyle,
         FEndStyle, MiterLimit);
-      FRenderer.PolyPolygonFS(APoints, ClipRect, FTransformation);
+      FRenderer.PolyPolygonFS(APoints, ClipRect);
 
       with THtml5CanvasElementGR32(CanvasElement) do
       begin
@@ -1414,6 +1332,7 @@ end;
 
 procedure THtml5Canvas2DContextGR32.StrokeRect(X, Y, Width, Height: Double);
 begin
+  // redirection
   Rect(X, Y, Width, Height);
   Stroke;
 end;
@@ -1438,15 +1357,21 @@ begin
   Stroke;
 end;
 
-procedure THtml5Canvas2DContextGR32.TextToPath(Text: string; x, y: Double);
+procedure THtml5Canvas2DContextGR32.TextToPath(Text: string; X, Y: Double);
 var
   Intf: ITextToPathSupport;
+  SubPathIndex, Index: Integer;
 begin
   with THtml5CanvasElementGR32(CanvasElement) do
   if Supports(FBitmap32.Backend, ITextToPathSupport, Intf) then
     Intf.TextToPath(FPath, X, Y, Text)
   else
     raise Exception.Create(RCStrInpropriateBackend);
+
+
+  for SubPathIndex := 0 to Length(FPath.Path) - 1 do
+    for Index := 0 to Length(FPath.Path[SubPathIndex]) - 1 do
+      FPath.Path[SubPathIndex][Index] := VertexTransform(FPath.Path[SubPathIndex][Index]);
 end;
 
 procedure THtml5Canvas2DContextGR32.Transform(A, B, C, D, E, F: Double);
@@ -1463,12 +1388,17 @@ begin
   TempMatrix[2, 1] := 0;
   TempMatrix[2, 2] := 1;
 
-  FTransformation.Matrix := Mult(FTransformation.Matrix, TempMatrix);
+  FTransformMatrix := Mult(FTransformMatrix, TempMatrix);
 end;
 
 procedure THtml5Canvas2DContextGR32.Translate(X, Y: Double);
+var
+  M: TFloatMatrix;
 begin
-  FTransformation.Translate(X, Y);
+  M := IdentityMatrix;
+  M[2, 0] := X;
+  M[2, 1] := Y;
+  FTransformMatrix := Mult(FTransformMatrix, M);
 end;
 
 procedure THtml5Canvas2DContextGR32.UpdateApplyShadow;
@@ -1477,5 +1407,13 @@ begin
     or (ShadowOffsetX <> 0) or (ShadowOffsetX <> 0));
 end;
 
-end.
+function THtml5Canvas2DContextGR32.VertexTransform(
+  Vertex: TFloatPoint): TFloatPoint;
+begin
+  Result.X := Vertex.X * FTransformMatrix[0, 0] +
+    Vertex.Y * FTransformMatrix[1, 0] + FTransformMatrix[2, 0];
+  Result.Y := Vertex.X * FTransformMatrix[0, 1] +
+    Vertex.Y * FTransformMatrix[1, 1] + FTransformMatrix[2, 1];
+end;
 
+end.
