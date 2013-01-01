@@ -142,7 +142,6 @@ type
     property ShadowBlur: Double read GetShadowBlur write SetShadowBlur;
     property ShadowColor: string read GetShadowColor write SetShadowColor;
 
-
     // rects
     procedure ClearRect(X, Y, Width, Height: Double);
     procedure FillRect(X, Y, Width, Height: Double);
@@ -169,9 +168,9 @@ type
 
     // drawing images
 (*
-    procedure DrawImage((HtmlImageElement or HtmlCanvasElement or HtmlVideoElement) image; dx, dy: Double); overload;
-    procedure DrawImage((HtmlImageElement or HtmlCanvasElement or HtmlVideoElement) image; dx, dy, dw, dh: Double); overload;
-    procedure DrawImage((HtmlImageElement or HtmlCanvasElement or HtmlVideoElement) image; sx, sy, sw, sh, dx, dy, dw, dh: Double); overload;
+    procedure DrawImage(image: (HtmlImageElement or HtmlCanvasElement or HtmlVideoElement); dx, dy: Double); overload;
+    procedure DrawImage(image: (HtmlImageElement or HtmlCanvasElement or HtmlVideoElement); dx, dy, dw, dh: Double); overload;
+    procedure DrawImage(image: (HtmlImageElement or HtmlCanvasElement or HtmlVideoElement); sx, sy, sw, sh, dx, dy, dw, dh: Double); overload;
 *)
 
     // pixel manipulation

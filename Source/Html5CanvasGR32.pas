@@ -923,6 +923,8 @@ begin
   CheckFontSize := True;
   FontSize := 0;
   FontName := '';
+  Bold := False;
+  Italic := False;
   FontStyleDefined := False;
 
   SpacePos := Pos(' ', FontStyle);
