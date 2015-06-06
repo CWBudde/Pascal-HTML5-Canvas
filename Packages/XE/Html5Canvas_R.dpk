@@ -1,6 +1,5 @@
-package Html5Canvas_RSXE2;
+package Html5Canvas_R;
 
-{$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -26,15 +25,16 @@ package Html5Canvas_RSXE2;
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Native HTML5 Canvas'}
+{$LIBSUFFIX 'XE'}
 {$IMPLICITBUILD ON}
 
 requires
   rtl,
-  GR32_RSXE2;
+  GR32_R;
 
 contains
-  Html5CanvasInterfaces in 'Html5CanvasInterfaces.pas',
-  Html5CanvasGR32 in 'Html5CanvasGR32.pas';
+  Html5CanvasInterfaces in '..\..\Source\Html5CanvasInterfaces.pas',
+  Html5CanvasGR32 in '..\..\Source\Html5CanvasGR32.pas';
 
 end.
 
