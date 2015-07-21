@@ -62,6 +62,7 @@ object FrmBasic: TFrmBasic
       'CanvasContext.LineTo(100, 100);'
       'CanvasContext.Stroke;')
     OnChange = SynEditChange
+    FontSmoothing = fsmNone
   end
   object PanelOutput: TPanel
     Left = 596
@@ -99,6 +100,9 @@ object FrmBasic: TFrmBasic
   end
   object SynDWSSyn: TSynDWSSyn
     DefaultFilter = 'DWScript Files (*.dws;*.pas;*.inc)|*.dws;*.pas;*.inc'
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
     Left = 152
     Top = 72
   end
@@ -140,13 +144,11 @@ object FrmBasic: TFrmBasic
             Name = 'Width'
             DataType = 'Integer'
             ReadAccess = 'GetWidth'
-            IsDefault = False
           end
           item
             Name = 'Height'
             DataType = 'Integer'
             ReadAccess = 'GetHeight'
-            IsDefault = False
           end>
       end
       item
@@ -156,7 +158,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetWidth'
             ResultType = 'Integer'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5CanvasElementGR32MethodsGetWidthEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -164,7 +166,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetHeight'
             ResultType = 'Integer'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5CanvasElementGR32MethodsGetHeightEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -884,105 +886,90 @@ object FrmBasic: TFrmBasic
             DataType = 'Float'
             ReadAccess = 'GetGlobalAlpha'
             WriteAccess = 'SetGlobalAlpha'
-            IsDefault = False
           end
           item
             Name = 'GlobalCompositeOperation'
             DataType = 'String'
             ReadAccess = 'GetGlobalCompositeOperation'
             WriteAccess = 'SetGlobalCompositeOperation'
-            IsDefault = False
           end
           item
             Name = 'StrokeStyle'
             DataType = 'Variant'
             ReadAccess = 'GetStrokeStyle'
             WriteAccess = 'SetStrokeStyle'
-            IsDefault = False
           end
           item
             Name = 'FillStyle'
             DataType = 'Variant'
             ReadAccess = 'GetFillStyle'
             WriteAccess = 'SetFillStyle'
-            IsDefault = False
           end
           item
             Name = 'ShadowOffsetX'
             DataType = 'Float'
             ReadAccess = 'GetShadowOffsetX'
             WriteAccess = 'SetShadowOffsetX'
-            IsDefault = False
           end
           item
             Name = 'ShadowOffsetY'
             DataType = 'Float'
             ReadAccess = 'GetShadowOffsetY'
             WriteAccess = 'SetShadowOffsetY'
-            IsDefault = False
           end
           item
             Name = 'ShadowBlur'
             DataType = 'Float'
             ReadAccess = 'GetShadowBlur'
             WriteAccess = 'SetShadowBlur'
-            IsDefault = False
           end
           item
             Name = 'ShadowColor'
             DataType = 'String'
             ReadAccess = 'GetShadowColor'
             WriteAccess = 'SetShadowColor'
-            IsDefault = False
           end
           item
             Name = 'Font'
             DataType = 'String'
             ReadAccess = 'GetFont'
             WriteAccess = 'SetFont'
-            IsDefault = False
           end
           item
             Name = 'TextAlign'
             DataType = 'String'
             ReadAccess = 'GetTextAlign'
             WriteAccess = 'SetTextAlign'
-            IsDefault = False
           end
           item
             Name = 'TextBaseline'
             DataType = 'String'
             ReadAccess = 'GetTextBaseline'
             WriteAccess = 'SetTextBaseline'
-            IsDefault = False
           end
           item
             Name = 'LineWidth'
             DataType = 'Float'
             ReadAccess = 'GetLineWidth'
             WriteAccess = 'SetLineWidth'
-            IsDefault = False
           end
           item
             Name = 'LineCap'
             DataType = 'String'
             ReadAccess = 'GetLineCap'
             WriteAccess = 'SetLineCap'
-            IsDefault = False
           end
           item
             Name = 'LineJoin'
             DataType = 'String'
             ReadAccess = 'GetLineJoin'
             WriteAccess = 'SetLineJoin'
-            IsDefault = False
           end
           item
             Name = 'MiterLimit'
             DataType = 'Float'
             ReadAccess = 'GetMiterLimit'
             WriteAccess = 'SetMiterLimit'
-            IsDefault = False
           end>
         OnCleanUp = dwsUnitClassesTHtml5Canvas2DContextCleanUp
       end
@@ -1003,31 +990,31 @@ object FrmBasic: TFrmBasic
         Methods = <
           item
             Name = 'Save'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsSaveEval
             Kind = mkProcedure
           end
           item
             Name = 'Restore'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsRestoreEval
             Kind = mkProcedure
           end
           item
             Name = 'BeginPath'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsBeginPathEval
             Kind = mkProcedure
           end
           item
             Name = 'Fill'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsFillEval
             Kind = mkProcedure
           end
           item
             Name = 'Stroke'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsStrokeEval
             Kind = mkProcedure
           end
@@ -1050,7 +1037,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Height'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsClearRectEval
             Kind = mkProcedure
           end
@@ -1073,7 +1060,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Height'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsFillRectEval
             Kind = mkProcedure
           end
@@ -1096,13 +1083,13 @@ object FrmBasic: TFrmBasic
                 Name = 'Height'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsStrokeRectEval
             Kind = mkProcedure
           end
           item
             Name = 'Clip'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsClipEval
             Kind = mkProcedure
           end
@@ -1118,7 +1105,7 @@ object FrmBasic: TFrmBasic
                 DataType = 'Float'
               end>
             ResultType = 'Boolean'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsIsPointInPathEval
             Kind = mkFunction
           end
@@ -1137,7 +1124,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Y'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsFillTextEval
             Kind = mkProcedure
           end
@@ -1156,7 +1143,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Y'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsStrokeText2Eval
             Kind = mkProcedure
           end
@@ -1171,7 +1158,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Y'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsScaleEval
             Kind = mkProcedure
           end
@@ -1182,7 +1169,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Angle'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsRotateEval
             Kind = mkProcedure
           end
@@ -1197,7 +1184,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Y'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsTranslateEval
             Kind = mkProcedure
           end
@@ -1228,7 +1215,7 @@ object FrmBasic: TFrmBasic
                 Name = 'F'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsTransformEval
             Kind = mkProcedure
           end
@@ -1259,7 +1246,7 @@ object FrmBasic: TFrmBasic
                 Name = 'F'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsSetTransformEval
             Kind = mkProcedure
           end
@@ -1274,13 +1261,13 @@ object FrmBasic: TFrmBasic
                 Name = 'sh'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsCreateImageDataEval
             Kind = mkProcedure
           end
           item
             Name = 'ClosePath'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsClosePathEval
             Kind = mkProcedure
           end
@@ -1295,7 +1282,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Y'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsMoveToEval
             Kind = mkProcedure
           end
@@ -1310,7 +1297,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Y'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsLineToEval
             Kind = mkProcedure
           end
@@ -1333,7 +1320,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Y'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsQuadraticCurveToEval
             Kind = mkProcedure
           end
@@ -1364,7 +1351,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Y'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsBezierCurveToEval
             Kind = mkProcedure
           end
@@ -1391,7 +1378,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Radius'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsArcToEval
             Kind = mkProcedure
           end
@@ -1414,7 +1401,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Height'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsRectEval
             Kind = mkProcedure
           end
@@ -1447,14 +1434,14 @@ object FrmBasic: TFrmBasic
                 HasDefaultValue = True
                 DefaultValue = False
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsArcEval
             Kind = mkProcedure
           end
           item
             Name = 'GetFillStyle'
             ResultType = 'Variant'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetFillStyleEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1462,7 +1449,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetGlobalAlpha'
             ResultType = 'Float'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetGlobalAlphaEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1470,7 +1457,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetGlobalCompositeOperation'
             ResultType = 'String'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetGlobalCompositeOperationEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1478,7 +1465,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetShadowBlur'
             ResultType = 'Float'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetShadowBlurEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1486,7 +1473,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetShadowColor'
             ResultType = 'String'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetShadowColorEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1494,7 +1481,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetShadowOffsetX'
             ResultType = 'Float'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetShadowOffsetXEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1502,7 +1489,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetShadowOffsetY'
             ResultType = 'Float'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetShadowOffsetYEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1510,7 +1497,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetStrokeStyle'
             ResultType = 'Variant'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetStrokeStyleEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1518,7 +1505,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetLineWidth'
             ResultType = 'Float'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetLineWidthEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1526,7 +1513,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetLineCap'
             ResultType = 'String'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetLineCapEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1534,7 +1521,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetLineJoin'
             ResultType = 'String'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetLineJoinEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1542,7 +1529,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetMiterLimit'
             ResultType = 'Float'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetMiterLimitEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1554,7 +1541,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'Variant'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetFillStyleEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1566,7 +1553,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetGlobalAlphaEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1578,7 +1565,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'String'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetGlobalCompositeOperationEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1590,7 +1577,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetShadowBlurEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1602,7 +1589,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'String'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetShadowColorEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1614,7 +1601,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetShadowOffsetXEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1626,7 +1613,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetShadowOffsetYEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1638,7 +1625,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'Variant'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetStrokeStyleEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1650,7 +1637,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetLineWidthEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1662,7 +1649,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'String'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetLineCapEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1674,7 +1661,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'String'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetLineJoinEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1686,7 +1673,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'Float'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetMiterLimitEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1694,7 +1681,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetFont'
             ResultType = 'String'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetFontEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1702,7 +1689,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetTextAlign'
             ResultType = 'String'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetTextAlignEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1710,7 +1697,7 @@ object FrmBasic: TFrmBasic
           item
             Name = 'GetTextBaseline'
             ResultType = 'String'
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsGetTextBaselineEval
             Visibility = cvProtected
             Kind = mkFunction
@@ -1722,7 +1709,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'String'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetFontEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1734,7 +1721,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'String'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetTextAlignEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1746,7 +1733,7 @@ object FrmBasic: TFrmBasic
                 Name = 'Value'
                 DataType = 'String'
               end>
-            Attributes = [maOverride]
+            Attributes = [maVirtual, maOverride]
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetTextBaselineEval
             Visibility = cvProtected
             Kind = mkProcedure
@@ -1778,13 +1765,11 @@ object FrmBasic: TFrmBasic
             Name = 'Width'
             DataType = 'Integer'
             ReadAccess = 'GetWidth'
-            IsDefault = False
           end
           item
             Name = 'Height'
             DataType = 'Integer'
             ReadAccess = 'GetHeight'
-            IsDefault = False
           end>
       end
       item
@@ -1966,27 +1951,24 @@ object FrmBasic: TFrmBasic
             DataType = 'Float'
             ReadAccess = 'GetLineWidth'
             WriteAccess = 'SetLineWidth'
-            IsDefault = False
           end
           item
             Name = 'LineCap'
-            ReadAccess = 'String'
-            WriteAccess = 'String'
-            IsDefault = False
+            DataType = 'String'
+            ReadAccess = 'GetLineCap'
+            WriteAccess = 'SetLineCap'
           end
           item
             Name = 'LineJoin'
             DataType = 'String'
             ReadAccess = 'GetString'
             WriteAccess = 'SetString'
-            IsDefault = False
           end
           item
             Name = 'MiterLimit'
             DataType = 'Float'
             ReadAccess = 'GetMiterLimit'
             WriteAccess = 'SetMiterLimit'
-            IsDefault = False
           end>
       end
       item
@@ -2040,21 +2022,18 @@ object FrmBasic: TFrmBasic
             DataType = 'String'
             ReadAccess = 'GetFont'
             WriteAccess = 'SetFont'
-            IsDefault = False
           end
           item
             Name = 'TextAlign'
             DataType = 'String'
             ReadAccess = 'GetTextAlign'
             WriteAccess = 'SetTextAlign'
-            IsDefault = False
           end
           item
             Name = 'TextBaseline'
             DataType = 'String'
             ReadAccess = 'GetTextBaseline'
             WriteAccess = 'SetTextBaseline'
-            IsDefault = False
           end>
       end
       item
@@ -2231,7 +2210,6 @@ object FrmBasic: TFrmBasic
             Name = 'Width'
             DataType = 'Integer'
             ReadAccess = 'GetWidth'
-            IsDefault = False
           end>
       end
       item
@@ -2252,13 +2230,11 @@ object FrmBasic: TFrmBasic
             Name = 'Width'
             DataType = 'Integer'
             ReadAccess = 'GetWidth'
-            IsDefault = False
           end
           item
             Name = 'Height'
             DataType = 'Integer'
             ReadAccess = 'GetHeight'
-            IsDefault = False
           end>
       end
       item
@@ -2530,56 +2506,48 @@ object FrmBasic: TFrmBasic
             DataType = 'Float'
             ReadAccess = 'GetGlobalAlpha'
             WriteAccess = 'SetGlobalAlpha'
-            IsDefault = False
           end
           item
             Name = 'GlobalCompositeOperation'
             DataType = 'String'
             ReadAccess = 'GetGlobalCompositeOperation'
             WriteAccess = 'SetGlobalCompositeOperation'
-            IsDefault = False
           end
           item
             Name = 'StrokeStyle'
             DataType = 'Variant'
             ReadAccess = 'GetStrokeStyle'
             WriteAccess = 'SetStrokeStyle'
-            IsDefault = False
           end
           item
             Name = 'FillStyle'
             DataType = 'Variant'
             ReadAccess = 'GetFillStyle'
             WriteAccess = 'SetFillStyle'
-            IsDefault = False
           end
           item
             Name = 'ShadowOffsetX'
             DataType = 'Float'
             ReadAccess = 'GetShadowOffsetX'
             WriteAccess = 'SetShadowOffsetX'
-            IsDefault = False
           end
           item
             Name = 'ShadowOffsetY'
             DataType = 'Float'
             ReadAccess = 'GetShadowOffsetY'
             WriteAccess = 'SetShadowOffsetY'
-            IsDefault = False
           end
           item
             Name = 'ShadowBlur'
             DataType = 'Float'
             ReadAccess = 'GetShadowBlur'
             WriteAccess = 'SetShadowBlur'
-            IsDefault = False
           end
           item
             Name = 'ShadowColor'
             DataType = 'String'
             ReadAccess = 'GetShadowColor'
             WriteAccess = 'SetShadowColor'
-            IsDefault = False
           end>
       end>
     UnitName = 'Html5Canvas'
