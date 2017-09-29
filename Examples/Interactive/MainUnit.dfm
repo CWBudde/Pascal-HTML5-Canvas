@@ -1961,8 +1961,8 @@ object FrmBasic: TFrmBasic
           item
             Name = 'LineJoin'
             DataType = 'String'
-            ReadAccess = 'GetString'
-            WriteAccess = 'SetString'
+            ReadAccess = 'GetLineJoin'
+            WriteAccess = 'SetLineJoin'
           end
           item
             Name = 'MiterLimit'
