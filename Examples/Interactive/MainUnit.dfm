@@ -1,4 +1,4 @@
-object FrmBasic: TFrmBasic
+object FormBasic: TFormBasic
   Left = 0
   Top = 0
   Caption = 'Basic'
@@ -34,6 +34,14 @@ object FrmBasic: TFrmBasic
     Font.Name = 'Courier New'
     Font.Style = []
     TabOrder = 0
+    CodeFolding.GutterShapeSize = 11
+    CodeFolding.CollapsedLineColor = clGrayText
+    CodeFolding.FolderBarLinesColor = clGrayText
+    CodeFolding.IndentGuidesColor = clGray
+    CodeFolding.IndentGuides = True
+    CodeFolding.ShowCollapsedLine = False
+    CodeFolding.ShowHintMark = True
+    UseCodeFolding = False
     Gutter.Font.Charset = DEFAULT_CHARSET
     Gutter.Font.Color = clWindowText
     Gutter.Font.Height = -11

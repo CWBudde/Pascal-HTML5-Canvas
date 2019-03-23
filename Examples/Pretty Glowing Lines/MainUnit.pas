@@ -7,16 +7,16 @@ uses
   AppEvnts, ExtCtrls, GR32, GR32_Image, Html5CanvasInterfaces, Html5CanvasGR32;
 
 type
-  TFrmPrettyGlowingLines = class(TForm)
+  TFormPrettyGlowingLines = class(TForm)
     PaintBox32: TPaintBox32;
     AppEvents: TApplicationEvents;
-    LinesTimer: TTimer;
-    BlankTimer: TTimer;
+    TimerLines: TTimer;
+    TimerBlank: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure AppEventsIdle(Sender: TObject; var Done: Boolean);
-    procedure BlankTimerTimer(Sender: TObject);
-    procedure LinesTimerTimer(Sender: TObject);
+    procedure TimerBlankTimer(Sender: TObject);
+    procedure TimerLinesTimer(Sender: TObject);
   private
     FCanvasElement: THtml5CanvasElementGR32;
     FContext2D: THtml5Canvas2DContextGR32;
@@ -27,30 +27,30 @@ type
   end;
 
 var
-  FrmPrettyGlowingLines: TFrmPrettyGlowingLines;
+  FormPrettyGlowingLines: TFormPrettyGlowingLines;
 
 implementation
 
 {$R *.dfm}
 
-procedure TFrmPrettyGlowingLines.FormCreate(Sender: TObject);
+procedure TFormPrettyGlowingLines.FormCreate(Sender: TObject);
 begin
   FCanvasElement := THtml5CanvasElementGR32.Create(PaintBox32.Buffer);
   FContext2D := THtml5Canvas2DContextGR32.Create(FCanvasElement);
 
   FLastPos := FloatPoint(FCanvasElement.Width, FCanvasElement.Height);
   FHue := 0;
-  LinesTimer.Enabled := True;
-  BlankTimer.Enabled := True;
+  TimerLines.Enabled := True;
+  TimerBlank.Enabled := True;
 end;
 
-procedure TFrmPrettyGlowingLines.FormDestroy(Sender: TObject);
+procedure TFormPrettyGlowingLines.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(FCanvasElement);
   FreeAndNil(FContext2D);
 end;
 
-procedure TFrmPrettyGlowingLines.LinesTimerTimer(Sender: TObject);
+procedure TFormPrettyGlowingLines.TimerLinesTimer(Sender: TObject);
 begin
   FContext2D.Save;
   try
@@ -80,16 +80,16 @@ begin
   end;
 end;
 
-procedure TFrmPrettyGlowingLines.AppEventsIdle(Sender: TObject;
-  var Done: Boolean);
-begin
-  PaintBox32.Invalidate
-end;
-
-procedure TFrmPrettyGlowingLines.BlankTimerTimer(Sender: TObject);
+procedure TFormPrettyGlowingLines.TimerBlankTimer(Sender: TObject);
 begin
   FContext2D.FillStyle := 'rgba(0,0,0,0.1)';
   FContext2D.FillRect(0, 0, FCanvasElement.Width, FCanvasElement.Height);
+end;
+
+procedure TFormPrettyGlowingLines.AppEventsIdle(Sender: TObject;
+  var Done: Boolean);
+begin
+  PaintBox32.Invalidate;
 end;
 
 initialization

@@ -1,4 +1,4 @@
-object FrmPrettyGlowingLines: TFrmPrettyGlowingLines
+object FormPrettyGlowingLines: TFormPrettyGlowingLines
   Left = 0
   Top = 0
   Caption = 'Basic'
@@ -28,17 +28,17 @@ object FrmPrettyGlowingLines: TFrmPrettyGlowingLines
     Left = 24
     Top = 24
   end
-  object LinesTimer: TTimer
+  object TimerLines: TTimer
     Enabled = False
     Interval = 50
-    OnTimer = LinesTimerTimer
+    OnTimer = TimerLinesTimer
     Left = 96
     Top = 24
   end
-  object BlankTimer: TTimer
+  object TimerBlank: TTimer
     Enabled = False
     Interval = 40
-    OnTimer = BlankTimerTimer
+    OnTimer = TimerBlankTimer
     Left = 168
     Top = 24
   end
