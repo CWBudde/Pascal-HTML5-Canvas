@@ -156,6 +156,8 @@ type
       Info: TProgramInfo; ExtObject: TObject);
     procedure dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetFillStyleEval(
       Info: TProgramInfo; ExtObject: TObject);
+    procedure dwsUnitClassesTHtml5Canvas2DContextMethodsCreateLinearGradientEval(
+      Info: TProgramInfo; ExtObject: TObject);
   private
     FCanvasElement: THtml5CanvasElementGR32;
     FChanged: Boolean;
@@ -177,7 +179,7 @@ implementation
 procedure TRescanThread.Execute;
 begin
   repeat
-    Synchronize(FrmBasic.RunScript);
+    Synchronize(FormBasic.RunScript);
     Sleep(100);
   until Terminated;
 end;
@@ -618,6 +620,14 @@ end;
 procedure TFormBasic.dwsUnitFunctionsGetCanvasElementEval(info: TProgramInfo);
 begin
 //  Info.ResultAsVariant := FCanvasElement;
+end;
+
+procedure TFormBasic.dwsUnitClassesTHtml5Canvas2DContextMethodsCreateLinearGradientEval(
+  Info: TProgramInfo; ExtObject: TObject);
+begin
+  Info.ResultAsVariant := THtml5Canvas2DContextGR32(ExtObject).CreateLinearGradient(
+    Info.ValueAsFloat['x0'], Info.ValueAsFloat['y0'],
+    Info.ValueAsFloat['x1'], Info.ValueAsFloat['y1']);
 end;
 
 procedure TFormBasic.dwsUnitInstancesCanvasElementInstantiate(info: TProgramInfo;

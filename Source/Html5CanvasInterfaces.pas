@@ -211,11 +211,12 @@ type
     FShadowOffsetX: Double;
     FShadowOffsetY: Double;
     FStrokeStyle: Variant;
+    FGlobalCompositeOperationText: string;
   protected
     function GetCanvas: IHtml5CanvasElement; virtual;
     function GetFillStyle: Variant; virtual;
     function GetGlobalAlpha: Double; virtual;
-    function GetGlobalCompositeOperation: string; virtual; abstract;
+    function GetGlobalCompositeOperation: string; virtual;
     function GetShadowBlur: Double; virtual;
     function GetShadowColor: string; virtual;
     function GetShadowOffsetX: Double; virtual;
@@ -223,7 +224,7 @@ type
     function GetStrokeStyle: Variant; virtual;
     procedure SetFillStyle(Value: Variant); virtual;
     procedure SetGlobalAlpha(Value: Double); virtual;
-    procedure SetGlobalCompositeOperation(Value: string); virtual; abstract;
+    procedure SetGlobalCompositeOperation(Value: string); virtual;
     procedure SetShadowBlur(Value: Double); virtual;
     procedure SetShadowColor(Value: string); virtual;
     procedure SetShadowOffsetX(Value: Double); virtual;
@@ -251,6 +252,7 @@ type
     procedure FillStyleChanged; virtual; abstract;
     procedure FontChanged; virtual; abstract;
     procedure GlobalAlphaChanged; virtual; abstract;
+    procedure GlobalCompositeOperationChanged; virtual; abstract;
     procedure LineWidthChanged; virtual; abstract;
     procedure MiterLimitChanged; virtual; abstract;
     procedure StrokeStyleChanged; virtual; abstract;
@@ -262,6 +264,7 @@ type
     property CanvasElement: TCustomHtml5CanvasElement read FCanvasElement;
   public
     constructor Create(CanvasElement: TCustomHtml5CanvasElement); virtual;
+    destructor Destroy; override;
 
     // state
     procedure Save; virtual; abstract;
@@ -376,6 +379,13 @@ begin
   FMiterLimit := 10;
 end;
 
+destructor TCustomHtml5Canvas2DContext.Destroy;
+begin
+  FCanvasElement := nil;
+
+  inherited;
+end;
+
 function TCustomHtml5Canvas2DContext.GetCanvas: IHtml5CanvasElement;
 begin
   Result := FCanvasElement;
@@ -394,6 +404,11 @@ end;
 function TCustomHtml5Canvas2DContext.GetGlobalAlpha: Double;
 begin
   Result := FGlobalAlpha;
+end;
+
+function TCustomHtml5Canvas2DContext.GetGlobalCompositeOperation: string;
+begin
+  Result := FGlobalCompositeOperationText;
 end;
 
 function TCustomHtml5Canvas2DContext.GetLineWidth: Double;
@@ -455,6 +470,16 @@ begin
   begin
     FGlobalAlpha := Value;
     GlobalAlphaChanged;
+  end;
+end;
+
+procedure TCustomHtml5Canvas2DContext.SetGlobalCompositeOperation(
+  Value: string);
+begin
+  if FGlobalCompositeOperationText <> Value then
+  begin
+    FGlobalCompositeOperationText := Value;
+    GlobalCompositeOperationChanged;
   end;
 end;
 

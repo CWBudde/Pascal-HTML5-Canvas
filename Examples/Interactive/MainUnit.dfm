@@ -887,6 +887,28 @@ object FormBasic: TFormBasic
             Attributes = [maVirtual, maAbstract]
             Visibility = cvProtected
             Kind = mkProcedure
+          end
+          item
+            Name = 'CreateLinearGradient'
+            Parameters = <
+              item
+                Name = 'x0'
+                DataType = 'Float'
+              end
+              item
+                Name = 'y0'
+                DataType = 'Float'
+              end
+              item
+                Name = 'x1'
+                DataType = 'Float'
+              end
+              item
+                Name = 'y1'
+                DataType = 'Float'
+              end>
+            ResultType = 'IHtml5CanvasGradient'
+            Kind = mkFunction
           end>
         Properties = <
           item
@@ -1745,6 +1767,29 @@ object FormBasic: TFormBasic
             OnEval = dwsUnitClassesTHtml5Canvas2DContextGR32MethodsSetTextBaselineEval
             Visibility = cvProtected
             Kind = mkProcedure
+          end
+          item
+            Name = 'CreateLinearGradient'
+            Parameters = <
+              item
+                Name = 'x0'
+                DataType = 'Float'
+              end
+              item
+                Name = 'y0'
+                DataType = 'Float'
+              end
+              item
+                Name = 'x1'
+                DataType = 'Float'
+              end
+              item
+                Name = 'y1'
+                DataType = 'Float'
+              end>
+            ResultType = 'IHtml5CanvasGradient'
+            OnEval = dwsUnitClassesTHtml5Canvas2DContextMethodsCreateLinearGradientEval
+            Kind = mkFunction
           end>
         OnCleanUp = dwsUnitClassesTHtml5Canvas2DContextCleanUp
       end>

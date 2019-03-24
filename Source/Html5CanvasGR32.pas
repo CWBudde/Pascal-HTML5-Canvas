@@ -1,4 +1,4 @@
-unit Html5CanvasGR32;
+﻿unit Html5CanvasGR32;
 
 interface
 
@@ -11,10 +11,16 @@ type
   THtml5CanvasElementGR32 = class(TCustomHtml5CanvasElement)
   protected
     FBitmap32: TBitmap32;
+    FOwnsBitmap: Boolean;
     function GetHeight: Cardinal; override;
     function GetWidth: Cardinal; override;
   public
-    constructor Create(Bitmap32: TBitmap32); virtual;
+    constructor Create; overload; virtual;
+    constructor Create(Bitmap32: TBitmap32); overload; virtual;
+    constructor Create(Width, Height: Integer); overload; virtual;
+    destructor Destroy; override;
+
+    property Bitmap32: TBitmap32 read FBitmap32;
   end;
 
   THtml5CanvasStateGR32 = record
@@ -41,6 +47,35 @@ type
     procedure AddColorStop(Offset: Double; Color: string); override;
   end;
 
+  THtml5CompositeOperation = (
+    coSourceOver,
+    coSourceIn,
+    coSourceOut,
+    coSourceAtop,
+    coDestinationOver,
+    coDestinationIn,
+    coDestinationOut,
+    coDestinationAtop,
+    coLighter,
+    coCopy,
+    coXor,
+    coMultiply,
+    coScreen,
+    coOverlay,
+    coDarken,
+    coLighten,
+    coColorDodge,
+    coColorBurn,
+    coHardLight,
+    coSoftLight,
+    coDifference,
+    coExclusion,
+    coHue,
+    coSaturation,
+    coColor,
+    coLuminosity
+  );
+
   THtml5Canvas2DContextGR32 = class(TCustomHtml5Canvas2DContext)
   private
     FPath: TFlattenedPath;
@@ -54,7 +89,7 @@ type
     FApplyShadow: Boolean;
     FDirectDraw: Boolean;
 
-    FGlobalCompositeOperation: string;
+    FGlobalCompositeOperation: THtml5CompositeOperation;
     FTextAlign: string;
     FTextBaseline: string;
 
@@ -66,10 +101,22 @@ type
     procedure TextToPath(Text: string; X, Y: Double);
     procedure UpdateApplyShadow;
     function VertexTransform(Vertex: TFloatPoint): TFloatPoint;
+    procedure CombineClear(F: TColor32; var B: TColor32; M: TColor32);
+    procedure CombineSourceIn(F: TColor32; var B: TColor32; M: TColor32);
+    procedure CombineDestinationIn(F: TColor32; var B: TColor32; M: TColor32);
+    procedure CombineDestinationOver(F: TColor32; var B: TColor32; M: TColor32);
+    procedure CombineSourceOver(F: TColor32; var B: TColor32; M: TColor32);
+    procedure CombineDestinationOut(F: TColor32; var B: TColor32; M: TColor32);
+    procedure CombineSourceOut(F: TColor32; var B: TColor32; M: TColor32);
+    procedure CombineDestinationAtop(F: TColor32; var B: TColor32; M: TColor32);
+    procedure CombineSourceAtop(F: TColor32; var B: TColor32; M: TColor32);
+    procedure CombineLighter(F: TColor32; var B: TColor32; M: TColor32);
+    procedure CombineXOR(F: TColor32; var B: TColor32; M: TColor32);
+    procedure CombineMultiply(F: TColor32; var B: TColor32; M: TColor32);
+    procedure CombineScreen(F: TColor32; var B: TColor32; M: TColor32);
+    procedure CombineDarken(F: TColor32; var B: TColor32; M: TColor32);
+    procedure CombineLighten(F: TColor32; var B: TColor32; M: TColor32);
   protected
-    function GetGlobalCompositeOperation: string; override;
-    procedure SetGlobalCompositeOperation(Value: string); override;
-
     // line caps/joins
     function GetLineCap: string; override;
     function GetLineJoin: string; override;
@@ -92,6 +139,8 @@ type
     procedure ShadowOffsetXChanged; override;
     procedure ShadowOffsetYChanged; override;
     procedure StrokeStyleChanged; override;
+
+    procedure GlobalCompositeOperationChanged; override;
   public
     constructor Create(CanvasElement: TCustomHtml5CanvasElement); override;
     destructor Destroy; override;
@@ -130,11 +179,12 @@ type
 //    function MeasureText(Text: string): TextMetrics;
 
     // drawing images
-(*
-    procedure DrawImage((HtmlImageElement or HtmlCanvasElement or HtmlVideoElement) image; dx, dy: Double); overload;
-    procedure DrawImage((HtmlImageElement or HtmlCanvasElement or HtmlVideoElement) image; dx, dy, dw, dh: Double); overload;
-    procedure DrawImage((HtmlImageElement or HtmlCanvasElement or HtmlVideoElement) image; sx, sy, sw, sh, dx, dy, dw, dh: Double); overload;
-*)
+    procedure DrawImage(image: THtml5CanvasElementGR32; dx, dy: Double); overload;
+    procedure DrawImage(image: THtml5CanvasElementGR32; dx, dy, dw, dh: Double); overload;
+    procedure DrawImage(image: THtml5CanvasElementGR32; sx, sy, sw, sh, dx, dy, dw, dh: Double); overload;
+    procedure DrawImage(image: TBitmap32; dx, dy: Double); overload;
+    procedure DrawImage(image: TBitmap32; dx, dy, dw, dh: Double); overload;
+    procedure DrawImage(image: TBitmap32; sx, sy, sw, sh, dx, dy, dw, dh: Double); overload;
 
     // transformations (default transform is the identity matrix)
     procedure Scale(X, Y: Double); override;
@@ -167,7 +217,8 @@ function Css3ColorToColor32(Text: string): TColor32;
 implementation
 
 uses
-  Math, GR32_Math, GR32_VectorUtils, GR32_Backends;
+  Math, GR32_Math, GR32_LowLevel, GR32_Blend, GR32_VectorUtils,
+  GR32_Resamplers, GR32_Backends;
 
 resourcestring
   RCStrWrongColorFormat = 'Wrong Format!';
@@ -681,9 +732,37 @@ end;
 
 { THtml5CanvasElementGR32 }
 
+constructor THtml5CanvasElementGR32.Create;
+begin
+  inherited;
+
+  FOwnsBitmap := True;
+  FBitmap32 := TBitmap32.Create;
+end;
+
 constructor THtml5CanvasElementGR32.Create(Bitmap32: TBitmap32);
 begin
+  inherited Create;
+
+  FOwnsBitmap := False;
   FBitmap32 := Bitmap32;
+end;
+
+constructor THtml5CanvasElementGR32.Create(Width, Height: Integer);
+begin
+  inherited Create;
+
+  FOwnsBitmap := True;
+  FBitmap32 := TBitmap32.Create;
+  FBitmap32.SetSize(Width, Height);
+end;
+
+destructor THtml5CanvasElementGR32.Destroy;
+begin
+  if FOwnsBitmap then
+    FreeAndNil(FBitmap32);
+
+  inherited;
 end;
 
 function THtml5CanvasElementGR32.GetHeight: Cardinal;
@@ -824,6 +903,337 @@ begin
 
 end;
 
+procedure THtml5Canvas2DContextGR32.DrawImage(image: THtml5CanvasElementGR32;
+  dx, dy: Double);
+begin
+  DrawImage(image.FBitmap32, dx, dy);
+end;
+
+procedure THtml5Canvas2DContextGR32.DrawImage(image: THtml5CanvasElementGR32;
+  dx, dy, dw, dh: Double);
+begin
+  DrawImage(image.FBitmap32, dx, dy, dw, dh);
+end;
+
+procedure THtml5Canvas2DContextGR32.DrawImage(image: THtml5CanvasElementGR32;
+  sx, sy, sw, sh, dx, dy, dw, dh: Double);
+begin
+  DrawImage(image.FBitmap32, dx, dy, dw, dh, sx, sy, sw, sh);
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineClear(F: TColor32; var B: TColor32; M: TColor32);
+begin
+
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineSourceOver(F: TColor32; var B: TColor32; M: TColor32);
+begin
+  B := BlendReg(F, B);
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineDestinationOver(F: TColor32; var B: TColor32; M: TColor32);
+begin
+  B := BlendReg(B, F);
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineSourceIn(F: TColor32; var B: TColor32; M: TColor32);
+var
+  S: TColor32Entry absolute F;
+  D: TColor32Entry absolute B;
+begin
+  D.R := Round((D.A * S.A * S.R) / (255 * 255));
+  D.G := Round((D.A * S.A * S.G) / (255 * 255));
+  D.B := Round((D.A * S.A * S.B) / (255 * 255));
+  D.A := Round((D.A * S.A) / 255);
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineDestinationIn(F: TColor32; var B: TColor32; M: TColor32);
+var
+  S: TColor32Entry absolute F;
+  D: TColor32Entry absolute B;
+begin
+  D.R := Round((D.A * S.A * D.R) / (255 * 255));
+  D.G := Round((D.A * S.A * D.G) / (255 * 255));
+  D.B := Round((D.A * S.A * D.B) / (255 * 255));
+  D.A := Round((D.A * S.A) / 255);
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineSourceOut(F: TColor32; var B: TColor32; M: TColor32);
+var
+  S: TColor32Entry absolute F;
+  D: TColor32Entry absolute B;
+begin
+  D.R := Round((S.A * (255 - D.A) * S.R) / (255 * 255));
+  D.G := Round((S.A * (255 - D.A) * S.G) / (255 * 255));
+  D.B := Round((S.A * (255 - D.A) * S.B) / (255 * 255));
+  D.A := Round((S.A * (255 - D.A)) / 255);
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineDestinationOut(F: TColor32; var B: TColor32; M: TColor32);
+var
+  S: TColor32Entry absolute F;
+  D: TColor32Entry absolute B;
+begin
+  D.R := Round((D.A * (255 - S.A) * D.R) / (255 * 255));
+  D.G := Round((D.A * (255 - S.A) * D.G) / (255 * 255));
+  D.B := Round((D.A * (255 - S.A) * D.B) / (255 * 255));
+  D.A := Round((D.A * (255 - S.A)) / 255);
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineSourceAtop(F: TColor32; var B: TColor32; M: TColor32);
+var
+  S: TColor32Entry absolute F;
+  D: TColor32Entry absolute B;
+begin
+  D.R := Round((S.A * S.R * D.A + D.A * D.R * (255 - S.A)) / (255 * 255));
+  D.G := Round((S.A * S.G * D.A + D.A * D.G * (255 - S.A)) / (255 * 255));
+  D.B := Round((S.A * S.B * D.A + D.A * D.B * (255 - S.A)) / (255 * 255));
+  D.A := Round((S.A * D.A + D.A * (255 - D.A)) / 255);
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineDestinationAtop(F: TColor32; var B: TColor32; M: TColor32);
+var
+  S: TColor32Entry absolute F;
+  D: TColor32Entry absolute B;
+begin
+  D.R := Round((S.A * S.R * (255 - D.A) + D.A * D.R * S.A) / (255 * 255));
+  D.G := Round((S.A * S.G * (255 - D.A) + D.A * D.G * S.A) / (255 * 255));
+  D.B := Round((S.A * S.B * (255 - D.A) + D.A * D.B * S.A) / (255 * 255));
+  D.A := Round((S.A * (255 - D.A) + D.A * S.A) / 255);
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineLighter(F: TColor32; var B: TColor32; M: TColor32);
+var
+  S: TColor32Entry absolute F;
+  D: TColor32Entry absolute B;
+begin
+  D.R := Clamp(Round((S.A * S.R + D.A * D.R) / 255));
+  D.G := Clamp(Round((S.A * S.G + D.A * D.G) / 255));
+  D.B := Clamp(Round((S.A * S.B + D.A * D.B) / 255));
+  D.A := Clamp(Round(S.A + D.A));
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineXOR(F: TColor32; var B: TColor32; M: TColor32);
+var
+  S: TColor32Entry absolute F;
+  D: TColor32Entry absolute B;
+begin
+  D.R := Round((S.A * S.R * (255 - D.A) + D.A * D.R * (255 - S.A)) / (255 * 255));
+  D.G := Round((S.A * S.G * (255 - D.A) + D.A * D.G * (255 - S.A)) / (255 * 255));
+  D.B := Round((S.A * S.B * (255 - D.A) + D.A * D.B * (255 - S.A)) / (255 * 255));
+  D.A := Round((S.A * (255 - D.A) + D.A * (255 - S.A)) / 255);
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineMultiply(F: TColor32; var B: TColor32; M: TColor32);
+var
+  S: TColor32Entry absolute F;
+  D: TColor32Entry absolute B;
+begin
+  D.R := Round((S.R * D.R) / 255);
+  D.G := Round((S.G * D.G) / 255);
+  D.B := Round((S.B * D.B) / 255);
+  D.A := Round((S.A * D.A) / 255);
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineScreen(F: TColor32; var B: TColor32; M: TColor32);
+var
+  S: TColor32Entry absolute F;
+  D: TColor32Entry absolute B;
+begin
+  D.R := Round(D.R + S.R - (D.R * S.R) / 255);
+  D.G := Round(D.G + S.G - (D.G * S.G) / 255);
+  D.B := Round(D.B + S.B - (D.B * S.B) / 255);
+  D.A := Round(D.A + S.A - (D.A * S.A) / 255);
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineDarken(F: TColor32; var B: TColor32; M: TColor32);
+var
+  S: TColor32Entry absolute F;
+  D: TColor32Entry absolute B;
+begin
+  D.R := Min(D.R, S.R);
+  D.G := Min(D.G, S.G);
+  D.B := Min(D.B, S.B);
+  D.A := Min(D.A, S.A);
+end;
+
+procedure THtml5Canvas2DContextGR32.CombineLighten(F: TColor32; var B: TColor32; M: TColor32);
+var
+  S: TColor32Entry absolute F;
+  D: TColor32Entry absolute B;
+begin
+  D.R := Max(D.R, S.R);
+  D.G := Max(D.G, S.G);
+  D.B := Max(D.B, S.B);
+  D.A := Max(D.A, S.A);
+end;
+
+procedure THtml5Canvas2DContextGR32.DrawImage(image: TBitmap32; dx, dy: Double);
+var
+  DrawMode: TDrawMode;
+  CombineCallback: TPixelCombineEvent;
+begin
+  case FGlobalCompositeOperation of
+    coSourceOver:
+      begin
+        DrawMode := dmBlend;
+        CombineCallback := CombineClear;
+      end;
+    coSourceIn:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineSourceIn;
+      end;
+    coSourceOut:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineSourceOut;
+      end;
+    coSourceAtop:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineSourceAtop;
+      end;
+    coDestinationOver:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineDestinationOver;
+      end;
+    coDestinationIn:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineDestinationIn;
+      end;
+    coDestinationOut:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineDestinationOut;
+      end;
+    coDestinationAtop:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineDestinationAtop;
+      end;
+    coLighter:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineLighter;
+      end;
+    coCopy:
+      begin
+        DrawMode := dmOpaque;
+      end;
+    coXor:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineXOR;
+      end;
+    coMultiply:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineMultiply;
+      end;
+    coScreen:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineScreen;
+      end;
+    coOverlay:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineClear;
+      end;
+    coDarken:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineDarken;
+      end;
+    coLighten:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineLighten;
+      end;
+    coColorDodge:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineClear;
+      end;
+    coColorBurn:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineClear;
+      end;
+    coHardLight:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineClear;
+      end;
+    coSoftLight:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineClear;
+      end;
+    coDifference:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineClear;
+      end;
+    coExclusion:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineClear;
+      end;
+    coHue:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineClear;
+      end;
+    coSaturation:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineClear;
+      end;
+    coColor:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineClear;
+      end;
+    coLuminosity:
+      begin
+        DrawMode := dmCustom;
+        CombineCallback := CombineClear;
+      end;
+  end;
+
+  if (dx = Round(dx)) and (Round(dy) = dy) then
+    BlockTransfer(FRenderer.Bitmap, Round(dx), Round(dy),
+      MakeRect(0, 0, FRenderer.Bitmap.Width, FRenderer.Bitmap.Height),
+      Image, MakeRect(0, 0, Image.Width, Image.Height), DrawMode, CombineCallback)
+  else
+    BlockTransferX(FRenderer.Bitmap, Fixed(dx), Fixed(dy),
+      Image, MakeRect(0, 0, Image.Width, Image.Height), DrawMode, CombineCallback);
+end;
+
+procedure THtml5Canvas2DContextGR32.DrawImage(image: TBitmap32; dx, dy, dw,
+  dh: Double);
+var
+  DestRect: TRect;
+begin
+  DestRect := TRect.Create(TPoint.Create(Round(dx), Round(dy)), Round(dw), Round(dh));
+  FRenderer.Bitmap.Draw(DestRect, TRect.Create(0, 0, image.Width, image.Height), image);
+end;
+
+procedure THtml5Canvas2DContextGR32.DrawImage(image: TBitmap32; sx, sy, sw, sh,
+  dx, dy, dw, dh: Double);
+var
+  SrcRect: TRect;
+  DestRect: TRect;
+begin
+  SrcRect := TRect.Create(TPoint.Create(Round(dx), Round(dy)), Round(dw), Round(dh));
+  DestRect := TRect.Create(TPoint.Create(Round(dx), Round(dy)), Round(dw), Round(dh));
+  FRenderer.Bitmap.Draw(DestRect, SrcRect, image);
+end;
+
 procedure THtml5Canvas2DContextGR32.Fill;
 var
   ClipRect: TFloatRect;
@@ -878,10 +1288,26 @@ begin
 end;
 
 procedure THtml5Canvas2DContextGR32.FillRect(X, Y, Width, Height: Double);
+var
+  Path: TArrayOfFloatPoint;
+  ClipRect: TFloatRect;
 begin
-  // redirection
-  Rect(X, Y, Width, Height);
-  Fill;
+  FPath.EndPath;
+
+  SetLength(Path, 5);
+  Path[0] := VertexTransform(FloatPoint(X, Y));
+  Path[1] := VertexTransform(FloatPoint(X + Width, Y));
+  Path[2] := VertexTransform(FloatPoint(X + Width, Y + Height));
+  Path[3] := VertexTransform(FloatPoint(X, Y + Height));
+  Path[4] := VertexTransform(FloatPoint(X, Y));
+
+  with THtml5CanvasElementGR32(CanvasElement) do
+  begin
+    ClipRect := FloatRect(FBitmap32.ClipRect);
+    FRenderer.Bitmap := FBitmap32;
+  end;
+  FRenderer.PolygonFS(Path, ClipRect);
+  FPath.BeginPath;
 end;
 
 procedure THtml5Canvas2DContextGR32.FillStyleChanged;
@@ -1000,11 +1426,6 @@ begin
     else
       FBitmap32.Font.Style := FBitmap32.Font.Style - [fsItalic];
   end;
-end;
-
-function THtml5Canvas2DContextGR32.GetGlobalCompositeOperation: string;
-begin
-  Result := FGlobalCompositeOperation;
 end;
 
 function THtml5Canvas2DContextGR32.GetImageData(SourceX, SourceY, SourceWidth,
@@ -1160,7 +1581,7 @@ begin
   FStates[Index].JoinStyle := FJoinStyle;
   FStates[Index].MiterLimit := MiterLimit;
   FStates[Index].GlobalAlpha := GlobalAlpha;
-  FStates[Index].GlobalCompositeOperation := FGlobalCompositeOperation;
+  FStates[Index].GlobalCompositeOperation := GlobalCompositeOperation;
   FStates[Index].ShadowBlur := ShadowBlur;
   FStates[Index].ShadowColor := ShadowColor;
   FStates[Index].ShadowOffsetX := ShadowOffsetX;
@@ -1181,11 +1602,118 @@ begin
   FTransformMatrix := Mult(FTransformMatrix, M);
 end;
 
-procedure THtml5Canvas2DContextGR32.SetGlobalCompositeOperation(Value: string);
+function StringToCompositeOperation(Text: string): THtml5CompositeOperation;
 begin
-  if FGlobalCompositeOperation <> Value then
+  if Text = '' then
+    Exit(coSourceOver);
+
+  if Text[1] = 's' then
   begin
-    FGlobalCompositeOperation := Value;
+    if Text = 'source-over' then
+      Result := coSourceOver
+    else
+    if Text = 'source-in' then
+      Result := coSourceIn
+    else
+    if Text = 'source-over' then
+      Result := coSourceOver
+    else
+    if Text = 'source-out' then
+      Result := coSourceOut
+    else
+    if Text = 'source-atop' then
+      Result := coSourceAtop
+    else
+    if Text = 'screen' then
+      Result := coScreen
+    else
+    if Text = 'soft-light' then
+      Result := coSoftLight
+    else
+    if Text = 'saturation' then
+      Result := coSaturation;
+  end
+  else
+  if Text[1] = 'd' then
+  begin
+    if Text = 'destination-over' then
+      Result := coDestinationOver
+    else
+    if Text = 'destination-in' then
+      Result := coDestinationIn
+    else
+    if Text = 'destination-out' then
+      Result := coDestinationOut
+    else
+    if Text = 'destination-atop' then
+      Result := coDestinationAtop
+    else
+    if Text = 'darken' then
+      Result := coDarken
+    else
+    if Text = 'difference' then
+      Result := coDifference
+  end
+  else
+  if Text[1] = 'c' then
+  begin
+    if Text = 'copy' then
+      Result := coCopy
+    else
+    if Text = 'color-dodge' then
+      Result := coColorDodge
+    else
+    if Text = 'color-burn' then
+      Result := coColorBurn
+    else
+    if Text = 'color' then
+      Result := coColor
+  end
+  else
+  if Text[1] = 'l' then
+  begin
+    if Text = 'lighter' then
+      Result := coLighter
+    else
+    if Text = 'lighten' then
+      Result := coLighten
+    else
+    if Text = 'luminosity' then
+      Result := coLuminosity
+  end
+  else
+  if Text[1] = 'h' then
+  begin
+    if Text = 'hard-light' then
+      Result := coHardLight
+    else
+    if Text = 'hue' then
+      Result := coHue;
+  end
+  else
+  if Text = 'multiply' then
+    Result := coMultiply
+  else
+  if Text = 'overlay' then
+    Result := coOverlay
+  else
+  if Text = 'exclusion' then
+    Result := coExclusion
+  else
+  if Text = 'xor' then
+    Result := coXor
+  else
+    Result := coSourceOver;
+end;
+
+procedure THtml5Canvas2DContextGR32.GlobalCompositeOperationChanged;
+var
+  NewCompositeOperation: THtml5CompositeOperation;
+begin
+  NewCompositeOperation := StringToCompositeOperation(GlobalCompositeOperation);
+  if NewCompositeOperation <> FGlobalCompositeOperation then
+  begin
+    FGlobalCompositeOperation := NewCompositeOperation;
   end;
 end;
 
